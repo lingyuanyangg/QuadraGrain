@@ -1,6 +1,6 @@
 # Quadra / Grain V2
 
-[English](README.en.md) | [简体中文](README.md)
+[English](README.md) | [简体中文](README.zh-CN.md)
 
 **A four-source granular synthesizer for Max for Live, featuring XY morphing, independent waveform regions, audio freeze, and recursive regranulation.**
 
@@ -85,8 +85,9 @@ Quadra_Grain_V2/
 ├── media/                          # Four original example WAV files
 ├── docs/TECHNICAL.en.md             # Detailed technical documentation
 ├── docs/TECHNICAL.md                # Chinese technical documentation
-├── README.en.md                    # English project overview
-├── README.md                       # Chinese project overview
+├── README.md                       # English project overview (default)
+├── README.zh-CN.md                 # Chinese project overview
+├── README.en.md                    # English project overview (alternate link)
 └── VALIDATION.md                    # Recorded validation scope
 ```
 

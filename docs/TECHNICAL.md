@@ -4,7 +4,7 @@
 
 本文根据当前主补丁、三个 `.gendsp`、`quadra_resample_ui.js` 和生成器编写。参数范围指基础 UI / Gen 参数，内部随机与组合运算可能产生不同的有效范围。
 
-[返回项目说明](../README.md)
+[返回项目说明](../README.zh-CN.md)
 
 ## 1. 系统分层
 

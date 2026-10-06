@@ -4,7 +4,7 @@
 
 This document describes the current main patch, three `.gendsp` engines, `quadra_resample_ui.js`, and generator. Parameter ranges refer to base UI / Gen values; internal randomization and combined operations can produce different effective ranges.
 
-[Back to the project overview](../README.en.md)
+[Back to the project overview](../README.md)
 
 ## 1. System layers
 
