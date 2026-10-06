@@ -8,6 +8,10 @@ Quadra / Grain places four samples at the corners of an XY pad. A `pictslider` c
 
 The project is distributed as editable `.maxpat`, `.gendsp`, and `.js` source files. It is suitable for ambient textures, drones, experimental sampling, and studying granular scheduling and feedback in Gen.
 
+## Max for Live device
+
+The packaged device is available as [Quadra Grain.amxd](<Quadra%20Grain.amxd>). Download the repository with its Gen files, UI script, and example audio to keep the supporting files together.
+
 ## Features
 
 - **Four sample slots:** drag audio into `live.drop`, with independent levels and waveform displays.

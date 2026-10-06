@@ -8,6 +8,10 @@ Quadra / Grain 将四个 sample 放在二维平面的四个角，通过 `pictsli
 
 项目以可编辑的 `.maxpat`、`.gendsp` 和 `.js` 源码发布。适合环境音、持续音、实验性采样和声音纹理制作，也可用于研究 Gen 中的颗粒调度与反馈实现。
 
+## Max for Live 设备
+
+打包设备：[Quadra Grain.amxd](<Quadra%20Grain.amxd>)。建议下载完整仓库，保留 Gen 文件、UI 脚本和示例音频。
+
 ## 功能
 
 - **四个 sample 槽位**：`live.drop` 拖入音频，独立音量与波形显示。

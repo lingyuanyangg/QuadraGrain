@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 validation/
 *.amxd
+
+# Packaged device provided by the project author
+!/Quadra Grain.amxd
