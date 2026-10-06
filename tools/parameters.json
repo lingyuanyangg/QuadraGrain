@@ -1,0 +1,418 @@
+[
+  [
+    "morphx",
+    "Morph X",
+    0,
+    1,
+    0.5,
+    ""
+  ],
+  [
+    "morphy",
+    "Morph Y",
+    0,
+    1,
+    0.5,
+    ""
+  ],
+  [
+    "size",
+    "Grain Size",
+    5,
+    1000,
+    120,
+    "ms"
+  ],
+  [
+    "density",
+    "Density",
+    0.5,
+    150,
+    24,
+    "Hz"
+  ],
+  [
+    "amount",
+    "Grain Amount",
+    1,
+    64,
+    32,
+    ""
+  ],
+  [
+    "pitch",
+    "Pitch",
+    -36,
+    36,
+    0,
+    "st"
+  ],
+  [
+    "position",
+    "Position",
+    0,
+    1,
+    0.25,
+    ""
+  ],
+  [
+    "scan",
+    "Scan Speed",
+    -1,
+    1,
+    0.03,
+    "cyc/s"
+  ],
+  [
+    "spray",
+    "Position Jitter",
+    0,
+    1,
+    0.05,
+    ""
+  ],
+  [
+    "sizej",
+    "Size Random",
+    0,
+    1,
+    0.1,
+    ""
+  ],
+  [
+    "densityj",
+    "Density Random",
+    0,
+    1,
+    0.1,
+    ""
+  ],
+  [
+    "pitchj",
+    "Pitch Jitter",
+    0,
+    24,
+    0,
+    "st"
+  ],
+  [
+    "rate",
+    "Playback Rate",
+    0.125,
+    4,
+    1,
+    "x"
+  ],
+  [
+    "reverse",
+    "Reverse Prob",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "shape",
+    "Envelope Shape",
+    0,
+    2,
+    1,
+    ""
+  ],
+  [
+    "bias",
+    "Attack Bias",
+    0.05,
+    0.95,
+    0.5,
+    ""
+  ],
+  [
+    "pan",
+    "Pan",
+    -1,
+    1,
+    0,
+    ""
+  ],
+  [
+    "spread",
+    "Pan Spread",
+    0,
+    1,
+    0.25,
+    ""
+  ],
+  [
+    "macro",
+    "Macro Randomness",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "feedback",
+    "Feedback",
+    0,
+    0.85,
+    0,
+    ""
+  ],
+  [
+    "fbdelay",
+    "Feedback Delay",
+    50,
+    2000,
+    350,
+    "ms"
+  ],
+  [
+    "cutoff",
+    "Grain Cutoff",
+    40,
+    18000,
+    10000,
+    "Hz"
+  ],
+  [
+    "resonance",
+    "Grain Q",
+    0.5,
+    8,
+    0.707,
+    ""
+  ],
+  [
+    "filterj",
+    "Filter Random",
+    0,
+    4,
+    0,
+    "oct"
+  ],
+  [
+    "run",
+    "Run",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "freeze",
+    "Freeze",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "filtermode",
+    "Filter Mode",
+    0,
+    3,
+    1,
+    ""
+  ],
+  [
+    "inputgain",
+    "Input Capture",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "output",
+    "Output",
+    -60,
+    0,
+    -15,
+    "dB"
+  ],
+  [
+    "lfo1rate",
+    "LFO 1 Rate",
+    0.01,
+    20,
+    0.13,
+    "Hz"
+  ],
+  [
+    "lfo1depth",
+    "LFO 1 Depth",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "lfo1dest",
+    "LFO 1 Target",
+    0,
+    24,
+    0,
+    ""
+  ],
+  [
+    "lfo1shape",
+    "LFO 1 Shape",
+    0,
+    3,
+    0,
+    ""
+  ],
+  [
+    "lfo2rate",
+    "LFO 2 Rate",
+    0.01,
+    20,
+    0.07,
+    "Hz"
+  ],
+  [
+    "lfo2depth",
+    "LFO 2 Depth",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "lfo2dest",
+    "LFO 2 Target",
+    0,
+    24,
+    0,
+    ""
+  ],
+  [
+    "lfo2shape",
+    "LFO 2 Shape",
+    0,
+    3,
+    0,
+    ""
+  ],
+  [
+    "alevel",
+    "A Level",
+    -70,
+    6,
+    0,
+    "dB"
+  ],
+  [
+    "blevel",
+    "B Level",
+    -70,
+    6,
+    0,
+    "dB"
+  ],
+  [
+    "clevel",
+    "C Level",
+    -70,
+    6,
+    0,
+    "dB"
+  ],
+  [
+    "dlevel",
+    "D Level",
+    -70,
+    6,
+    0,
+    "dB"
+  ],
+  [
+    "astart",
+    "A Start",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "aend",
+    "A End",
+    0,
+    1,
+    1,
+    ""
+  ],
+  [
+    "bstart",
+    "B Start",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "bend",
+    "B End",
+    0,
+    1,
+    1,
+    ""
+  ],
+  [
+    "cstart",
+    "C Start",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "cend",
+    "C End",
+    0,
+    1,
+    1,
+    ""
+  ],
+  [
+    "dstart",
+    "D Start",
+    0,
+    1,
+    0,
+    ""
+  ],
+  [
+    "dend",
+    "D End",
+    0,
+    1,
+    1,
+    ""
+  ],
+  [
+    "fbsize",
+    "Regrain Size",
+    0.25,
+    4,
+    1,
+    "x"
+  ],
+  [
+    "fbdensity",
+    "Regrain Density",
+    0.25,
+    4,
+    1,
+    "x"
+  ],
+  [
+    "fbpitch",
+    "Regrain Pitch",
+    -24,
+    24,
+    0,
+    "st"
+  ]
+]

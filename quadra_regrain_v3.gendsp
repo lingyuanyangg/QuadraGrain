@@ -1,0 +1,113 @@
+{
+  "patcher": {
+    "fileversion": 1,
+    "appversion": {
+      "major": 9,
+      "minor": 1,
+      "revision": 3,
+      "architecture": "arm64",
+      "modernui": 1
+    },
+    "classnamespace": "dsp.gen",
+    "rect": [
+      60,
+      60,
+      900,
+      650
+    ],
+    "boxes": [
+      {
+        "box": {
+          "id": "code",
+          "maxclass": "codebox",
+          "numinlets": 0,
+          "numoutlets": 3,
+          "patching_rect": [
+            120,
+            60,
+            720,
+            500
+          ],
+          "code": "Buffer fbtemp;\nData voices2(32,7);\nHistory clock2(0); History cursor2(0); History gain2(0); History norm2(1); History writephase2(0);\nParam feedback(0,min=0,max=.85); Param fbdelay(350,min=50,max=2000);\nParam fbsize(1,min=.25,max=4); Param fbdensity(1,min=.25,max=4); Param fbpitch(0,min=-24,max=24);\nParam size(120,min=5,max=1000); Param density(24,min=.5,max=150); Param pitch(0,min=-36,max=36);\nParam pitchj(0,min=0,max=24); Param sizej(.1,min=0,max=1); Param densityj(.1,min=0,max=1);\nParam rate(1,min=.125,max=4); Param reverse(0,min=0,max=1); Param pan(0,min=-1,max=1); Param spread(.25,min=0,max=1);\nParam shape(1,min=0,max=2); Param bias(.5,min=.05,max=.95); Param run(0,min=0,max=1);\nringlen2=max(2,dim(fbtemp)); writephase2=wrap(writephase2+1,0,ringlen2); clock2=clock2-1;\nif(run>.5 && feedback>.0001 && clock2<=0 && ringlen2>2){\n slot2=-1;\n for(j=0;j<32;j+=1){idx2=wrap(cursor2+j,0,32);if(slot2 < 0 && peek(voices2,idx2,0) >= peek(voices2,idx2,1)){slot2=idx2;}}\n if(slot2>=0){\n  dur2=clamp(size*fbsize*(1+noise()*sizej*.95),5,2000)*.001*samplerate;\n  speed2=rate*pow(2,(pitch+fbpitch+noise()*pitchj)/12)*((noise()*.5+.5)<reverse?-1:1);\n  lookback=clamp(fbdelay*.001*samplerate,32,ringlen2-2);\n  poke(voices2,0,slot2,0);poke(voices2,dur2,slot2,1);poke(voices2,wrap(writephase2-lookback,0,ringlen2),slot2,2);\n  poke(voices2,speed2,slot2,3);poke(voices2,clamp(pan+noise()*spread,-1,1),slot2,4);poke(voices2,bias,slot2,5);poke(voices2,shape,slot2,6);\n  cursor2=wrap(slot2+1,0,32);\n }\n clock2=max(1,samplerate/(density*fbdensity)*(1+noise()*densityj*.95));\n}\nif(run<.5){clock2=0;}\nsum2L=0;sum2R=0;active2=0;\nfor(i=0;i<32;i+=1){\n age2=peek(voices2,i,0);dur2=peek(voices2,i,1);\n if(age2<dur2 && dur2>0){\n  active2=active2+1;phase2=age2/max(1,dur2-1);bias2=peek(voices2,i,5);shape2=peek(voices2,i,6);\n  tri2=clamp(phase2<bias2?phase2/bias2:(1-phase2)/(1-bias2),0,1);hann2=.5-.5*cos(pi*tri2);env2=shape2<=1?mix(tri2,hann2,shape2):mix(hann2,min(1,tri2*4),shape2-1);\n  pos2=wrap(peek(voices2,i,2)+age2*peek(voices2,i,3),0,ringlen2);pan2=peek(voices2,i,4);\n  frame2=floor(pos2);next2=wrap(frame2+1,0,ringlen2);frac2=fract(pos2);\n  grain2L=mix(peek(fbtemp,frame2,0),peek(fbtemp,next2,0),frac2);\n  grain2R=mix(peek(fbtemp,frame2,min(1,channels(fbtemp)-1)),peek(fbtemp,next2,min(1,channels(fbtemp)-1)),frac2);\n  sum2L=sum2L+grain2L*env2*cos((pan2+1)*pi*.25);\n  sum2R=sum2R+grain2R*env2*sin((pan2+1)*pi*.25);\n  poke(voices2,age2+1,i,0);\n }\n}\nnorm2=norm2+(1/sqrt(max(1,active2*.375))-norm2)*.001;gain2=gain2+(feedback-gain2)*(1-exp(-1/(samplerate*.02)));\nout1=tanh(sum2L*norm2)*gain2;out2=tanh(sum2R*norm2)*gain2;out3=active2;"
+        }
+      },
+      {
+        "box": {
+          "id": "out1",
+          "maxclass": "newobj",
+          "text": "out 1",
+          "patching_rect": [
+            90,
+            590,
+            50,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out2",
+          "maxclass": "newobj",
+          "text": "out 2",
+          "patching_rect": [
+            180,
+            590,
+            50,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out3",
+          "maxclass": "newobj",
+          "text": "out 3",
+          "patching_rect": [
+            270,
+            590,
+            50,
+            22
+          ]
+        }
+      }
+    ],
+    "lines": [
+      {
+        "patchline": {
+          "source": [
+            "code",
+            0
+          ],
+          "destination": [
+            "out1",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            1
+          ],
+          "destination": [
+            "out2",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            2
+          ],
+          "destination": [
+            "out3",
+            0
+          ]
+        }
+      }
+    ]
+  }
+}

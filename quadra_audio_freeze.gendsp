@@ -1,0 +1,138 @@
+{
+  "patcher": {
+    "fileversion": 1,
+    "appversion": {
+      "major": 9,
+      "minor": 1,
+      "revision": 3,
+      "architecture": "arm64",
+      "modernui": 1
+    },
+    "classnamespace": "dsp.gen",
+    "rect": [
+      60,
+      60,
+      800,
+      580
+    ],
+    "boxes": [
+      {
+        "box": {
+          "id": "code",
+          "maxclass": "codebox",
+          "numinlets": 2,
+          "numoutlets": 2,
+          "patching_rect": [
+            130,
+            60,
+            620,
+            430
+          ],
+          "code": "Data capture(131072,2);\nHistory head(0);History filled(0);History start(0);History length(1);History phase(0);History previous(0);History blend(0);\nParam freeze(0,min=0,max=1); cap=min(131072,floor(samplerate*.25));\nif(freeze>.5 && previous<.5){length=max(2,min(filled,cap));start=wrap(head-length,0,cap);phase=0;}\nprevious=freeze;blend=clamp(blend+(freeze>.5?1:-1)/(samplerate*.02),0,1);\nif(freeze<.5 && blend==0){poke(capture,in1,head,0);poke(capture,in2,head,1);head=wrap(head+1,0,cap);filled=min(cap,filled+1);}\np1=wrap(phase,0,length);p2=wrap(phase+length*.5,0,length);w1=.5-.5*cos(twopi*p1/length);w2=1-w1;\nr1=wrap(start+p1,0,cap);r2=wrap(start+p2,0,cap);\nf1L=mix(peek(capture,floor(r1),0),peek(capture,wrap(floor(r1)+1,0,cap),0),fract(r1));\nf2L=mix(peek(capture,floor(r2),0),peek(capture,wrap(floor(r2)+1,0,cap),0),fract(r2));\nf1R=mix(peek(capture,floor(r1),1),peek(capture,wrap(floor(r1)+1,0,cap),1),fract(r1));\nf2R=mix(peek(capture,floor(r2),1),peek(capture,wrap(floor(r2)+1,0,cap),1),fract(r2));\nphase=wrap(phase+1,0,length);out1=mix(in1,f1L*w1+f2L*w2,blend);out2=mix(in2,f1R*w1+f2R*w2,blend);"
+        }
+      },
+      {
+        "box": {
+          "id": "in1",
+          "maxclass": "newobj",
+          "text": "in 1",
+          "patching_rect": [
+            70,
+            20,
+            45,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "in2",
+          "maxclass": "newobj",
+          "text": "in 2",
+          "patching_rect": [
+            140,
+            20,
+            45,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out1",
+          "maxclass": "newobj",
+          "text": "out 1",
+          "patching_rect": [
+            90,
+            520,
+            50,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out2",
+          "maxclass": "newobj",
+          "text": "out 2",
+          "patching_rect": [
+            180,
+            520,
+            50,
+            22
+          ]
+        }
+      }
+    ],
+    "lines": [
+      {
+        "patchline": {
+          "source": [
+            "in1",
+            0
+          ],
+          "destination": [
+            "code",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "in2",
+            0
+          ],
+          "destination": [
+            "code",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            0
+          ],
+          "destination": [
+            "out1",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            1
+          ],
+          "destination": [
+            "out2",
+            0
+          ]
+        }
+      }
+    ]
+  }
+}

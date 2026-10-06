@@ -1,0 +1,191 @@
+// QUADRA GRAIN — sample-accurate scheduler, 64 non-stealing voices.
+// Data channel layout: age,duration,start,speed,pan,shape,bias,g,k,mode,filter states, four source regions.
+Buffer a; Buffer b; Buffer c; Buffer d;
+Data voices(64,24);
+History clocker(0); History scanphase(0); History cursor(0);
+History mx(.5); History my(.5); History gain(0); History norm(1); History heldpos(.25);
+History lfoph1(0); History lfoph2(0); History sh1(0); History sh2(0);
+Param morphx(0.5, min=0, max=1);
+Param morphy(0.5, min=0, max=1);
+Param size(120, min=5, max=1000);
+Param density(24, min=0.5, max=150);
+Param amount(32, min=1, max=64);
+Param pitch(0, min=-36, max=36);
+Param position(0.25, min=0, max=1);
+Param scan(0.03, min=-1, max=1);
+Param spray(0.05, min=0, max=1);
+Param sizej(0.1, min=0, max=1);
+Param densityj(0.1, min=0, max=1);
+Param pitchj(0, min=0, max=24);
+Param rate(1, min=0.125, max=4);
+Param reverse(0, min=0, max=1);
+Param shape(1, min=0, max=2);
+Param bias(0.5, min=0.05, max=0.95);
+Param pan(0, min=-1, max=1);
+Param spread(0.25, min=0, max=1);
+Param macro(0, min=0, max=1);
+Param feedback(0, min=0, max=0.85);
+Param fbdelay(350, min=50, max=2000);
+Param cutoff(10000, min=40, max=18000);
+Param resonance(0.707, min=0.5, max=8);
+Param filterj(0, min=0, max=4);
+Param run(0, min=0, max=1);
+Param freeze(0, min=0, max=1);
+Param filtermode(1, min=0, max=3);
+Param inputgain(0, min=0, max=1);
+Param output(-15, min=-60, max=0);
+Param lfo1rate(0.13, min=0.01, max=20);
+Param lfo1depth(0, min=0, max=1);
+Param lfo1dest(0, min=0, max=24);
+Param lfo1shape(0, min=0, max=3);
+Param lfo2rate(0.07, min=0.01, max=20);
+Param lfo2depth(0, min=0, max=1);
+Param lfo2dest(0, min=0, max=24);
+Param lfo2shape(0, min=0, max=3);
+Param alevel(0, min=-70, max=6);
+Param blevel(0, min=-70, max=6);
+Param clevel(0, min=-70, max=6);
+Param dlevel(0, min=-70, max=6);
+Param astart(0, min=0, max=1);
+Param aend(1, min=0, max=1);
+Param bstart(0, min=0, max=1);
+Param bend(1, min=0, max=1);
+Param cstart(0, min=0, max=1);
+Param cend(1, min=0, max=1);
+Param dstart(0, min=0, max=1);
+Param dend(1, min=0, max=1);
+Param fbsize(1, min=0.25, max=4);
+Param fbdensity(1, min=0.25, max=4);
+Param fbpitch(0, min=-24, max=24);
+Param sra(44100);
+Param readya(1);
+History levela(1);
+Param srb(44100);
+Param readyb(1);
+History levelb(1);
+Param src(44100);
+Param readyc(1);
+History levelc(1);
+Param srd(44100);
+Param readyd(1);
+History leveld(1);
+
+lfoph1 = wrap(lfoph1+lfo1rate/samplerate,0,1);
+lfoph2 = wrap(lfoph2+lfo2rate/samplerate,0,1);
+sh1 = lfoph1 < lfo1rate/samplerate ? noise() : sh1;
+sh2 = lfoph2 < lfo2rate/samplerate ? noise() : sh2;
+lv1 = lfo1shape < .5 ? sin(lfoph1*twopi) : (lfo1shape < 1.5 ? 1-4*abs(lfoph1-.5) : (lfo1shape < 2.5 ? 2*lfoph1-1 : sh1));
+lv2 = lfo2shape < .5 ? sin(lfoph2*twopi) : (lfo2shape < 1.5 ? 1-4*abs(lfoph2-.5) : (lfo2shape < 2.5 ? 2*lfoph2-1 : sh2));
+v_morphx = clamp(morphx + ((lfo1dest == 1)*lv1*lfo1depth + (lfo2dest == 1)*lv2*lfo2depth)*0.5, 0, 1);
+v_morphy = clamp(morphy + ((lfo1dest == 2)*lv1*lfo1depth + (lfo2dest == 2)*lv2*lfo2depth)*0.5, 0, 1);
+v_size = clamp(size + ((lfo1dest == 3)*lv1*lfo1depth + (lfo2dest == 3)*lv2*lfo2depth)*497.5, 5, 1000);
+v_density = clamp(density + ((lfo1dest == 4)*lv1*lfo1depth + (lfo2dest == 4)*lv2*lfo2depth)*74.75, 0.5, 150);
+v_amount = clamp(amount + ((lfo1dest == 5)*lv1*lfo1depth + (lfo2dest == 5)*lv2*lfo2depth)*31.5, 1, 64);
+v_pitch = clamp(pitch + ((lfo1dest == 6)*lv1*lfo1depth + (lfo2dest == 6)*lv2*lfo2depth)*36.0, -36, 36);
+v_position = clamp(position + ((lfo1dest == 7)*lv1*lfo1depth + (lfo2dest == 7)*lv2*lfo2depth)*0.5, 0, 1);
+v_scan = clamp(scan + ((lfo1dest == 8)*lv1*lfo1depth + (lfo2dest == 8)*lv2*lfo2depth)*1.0, -1, 1);
+v_spray = clamp(spray + ((lfo1dest == 9)*lv1*lfo1depth + (lfo2dest == 9)*lv2*lfo2depth)*0.5, 0, 1);
+v_sizej = clamp(sizej + ((lfo1dest == 10)*lv1*lfo1depth + (lfo2dest == 10)*lv2*lfo2depth)*0.5, 0, 1);
+v_densityj = clamp(densityj + ((lfo1dest == 11)*lv1*lfo1depth + (lfo2dest == 11)*lv2*lfo2depth)*0.5, 0, 1);
+v_pitchj = clamp(pitchj + ((lfo1dest == 12)*lv1*lfo1depth + (lfo2dest == 12)*lv2*lfo2depth)*12.0, 0, 24);
+v_rate = clamp(rate + ((lfo1dest == 13)*lv1*lfo1depth + (lfo2dest == 13)*lv2*lfo2depth)*1.9375, 0.125, 4);
+v_reverse = clamp(reverse + ((lfo1dest == 14)*lv1*lfo1depth + (lfo2dest == 14)*lv2*lfo2depth)*0.5, 0, 1);
+v_shape = clamp(shape + ((lfo1dest == 15)*lv1*lfo1depth + (lfo2dest == 15)*lv2*lfo2depth)*1.0, 0, 2);
+v_bias = clamp(bias + ((lfo1dest == 16)*lv1*lfo1depth + (lfo2dest == 16)*lv2*lfo2depth)*0.44999999999999996, 0.05, 0.95);
+v_pan = clamp(pan + ((lfo1dest == 17)*lv1*lfo1depth + (lfo2dest == 17)*lv2*lfo2depth)*1.0, -1, 1);
+v_spread = clamp(spread + ((lfo1dest == 18)*lv1*lfo1depth + (lfo2dest == 18)*lv2*lfo2depth)*0.5, 0, 1);
+v_macro = clamp(macro + ((lfo1dest == 19)*lv1*lfo1depth + (lfo2dest == 19)*lv2*lfo2depth)*0.5, 0, 1);
+v_feedback = clamp(feedback + ((lfo1dest == 20)*lv1*lfo1depth + (lfo2dest == 20)*lv2*lfo2depth)*0.425, 0, 0.85);
+v_fbdelay = clamp(fbdelay + ((lfo1dest == 21)*lv1*lfo1depth + (lfo2dest == 21)*lv2*lfo2depth)*975.0, 50, 2000);
+v_cutoff = clamp(cutoff + ((lfo1dest == 22)*lv1*lfo1depth + (lfo2dest == 22)*lv2*lfo2depth)*8980.0, 40, 18000);
+v_resonance = clamp(resonance + ((lfo1dest == 23)*lv1*lfo1depth + (lfo2dest == 23)*lv2*lfo2depth)*3.75, 0.5, 8);
+v_filterj = clamp(filterj + ((lfo1dest == 24)*lv1*lfo1depth + (lfo2dest == 24)*lv2*lfo2depth)*2.0, 0, 4);
+levela = levela + ((alevel <= -69.9 ? 0 : pow(10,alevel/20))*readya-levela)*(1-exp(-1/(.01*samplerate)));
+levelb = levelb + ((blevel <= -69.9 ? 0 : pow(10,blevel/20))*readyb-levelb)*(1-exp(-1/(.01*samplerate)));
+levelc = levelc + ((clevel <= -69.9 ? 0 : pow(10,clevel/20))*readyc-levelc)*(1-exp(-1/(.01*samplerate)));
+leveld = leveld + ((dlevel <= -69.9 ? 0 : pow(10,dlevel/20))*readyd-leveld)*(1-exp(-1/(.01*samplerate)));
+
+// Macro adds remaining headroom without overwriting the automatable base knobs.
+jpos = v_spray+(1-v_spray)*v_macro;
+jsize = v_sizej+(1-v_sizej)*v_macro;
+jdens = v_densityj+(1-v_densityj)*v_macro;
+jpitch = v_pitchj+(24-v_pitchj)*v_macro;
+jpan = v_spread+(1-v_spread)*v_macro;
+scanphase = wrap(scanphase+v_scan/samplerate,0,1);
+heldpos = wrap(v_position+scanphase,0,1);
+mx = mx+(v_morphx-mx)*(1-exp(-1/(.015*samplerate)));
+my = my+(v_morphy-my)*(1-exp(-1/(.015*samplerate)));
+wa=sqrt((1-mx)*my)*levela; wb=sqrt(mx*my)*levelb; wc=sqrt((1-mx)*(1-my))*levelc; wd=sqrt(mx*(1-my))*leveld;
+clocker = clocker-1;
+if (run > .5 && clocker <= 0) {
+    slot=-1;
+    for (j=0; j<64; j+=1) {
+        idx=wrap(cursor+j,0,64);
+        if (slot < 0 && idx < floor(v_amount) && peek(voices,idx,0) >= peek(voices,idx,1)) { slot=idx; }
+    }
+    if (slot >= 0) {
+        dur=max(5,v_size*(1+noise()*jsize*.95))*.001*samplerate;
+        spd=v_rate*pow(2,(v_pitch+noise()*jpitch)/12)*((noise()*.5+.5)<v_reverse ? -1 : 1);
+        fc=clamp(v_cutoff*pow(2,noise()*v_filterj),20,min(20000,samplerate*.4));
+        poke(voices,0,slot,0); poke(voices,dur,slot,1);
+        poke(voices,wrap(heldpos+noise()*jpos*.5,0,1),slot,2);
+        poke(voices,spd,slot,3); poke(voices,clamp(v_pan+noise()*jpan,-1,1),slot,4);
+        poke(voices,v_shape,slot,5); poke(voices,v_bias,slot,6);
+        poke(voices,tan(pi*fc/samplerate),slot,7); poke(voices,1/v_resonance,slot,8);
+        poke(voices,filtermode,slot,9);
+        for (z=12;z<16;z+=1) { poke(voices,0,slot,z); }
+        poke(voices,min(astart,aend),slot,16); poke(voices,max(astart,aend),slot,17);
+        poke(voices,min(bstart,bend),slot,18); poke(voices,max(bstart,bend),slot,19);
+        poke(voices,min(cstart,cend),slot,20); poke(voices,max(cstart,cend),slot,21);
+        poke(voices,min(dstart,dend),slot,22); poke(voices,max(dstart,dend),slot,23);
+        cursor=wrap(slot+1,0,64);
+    }
+    clocker=max(1,samplerate/v_density*(1+noise()*jdens*.95));
+}
+if (run < .5) { clocker=0; }
+sumL=0; sumR=0; active=0;
+for (i=0; i<64; i+=1) {
+    age=peek(voices,i,0); dur=peek(voices,i,1);
+    if (age < dur && dur > 0) {
+        active+=1;
+        pos=peek(voices,i,2); speed=peek(voices,i,3);
+        loa=min(peek(voices,i,16)*dim(a),max(0,dim(a)-2));
+        lena=max(2,peek(voices,i,17)*dim(a)-loa);
+        ia=loa+wrap(pos*lena+age*speed*sra/samplerate,0,lena);
+        lob=min(peek(voices,i,18)*dim(b),max(0,dim(b)-2));
+        lenb=max(2,peek(voices,i,19)*dim(b)-lob);
+        ib=lob+wrap(pos*lenb+age*speed*srb/samplerate,0,lenb);
+        loc=min(peek(voices,i,20)*dim(c),max(0,dim(c)-2));
+        lenc=max(2,peek(voices,i,21)*dim(c)-loc);
+        ic=loc+wrap(pos*lenc+age*speed*src/samplerate,0,lenc);
+        lod=min(peek(voices,i,22)*dim(d),max(0,dim(d)-2));
+        lend=max(2,peek(voices,i,23)*dim(d)-lod);
+        idd=lod+wrap(pos*lend+age*speed*srd/samplerate,0,lend);
+        al=mix(peek(a,floor(ia),0,boundmode="wrap"),peek(a,loa+wrap(floor(ia)+1-loa,0,lena),0,boundmode="wrap"),fract(ia)); ar=mix(peek(a,floor(ia),min(1,channels(a)-1),boundmode="wrap"),peek(a,loa+wrap(floor(ia)+1-loa,0,lena),min(1,channels(a)-1),boundmode="wrap"),fract(ia));
+        bl=mix(peek(b,floor(ib),0,boundmode="wrap"),peek(b,lob+wrap(floor(ib)+1-lob,0,lenb),0,boundmode="wrap"),fract(ib)); br=mix(peek(b,floor(ib),min(1,channels(b)-1),boundmode="wrap"),peek(b,lob+wrap(floor(ib)+1-lob,0,lenb),min(1,channels(b)-1),boundmode="wrap"),fract(ib));
+        cl=mix(peek(c,floor(ic),0,boundmode="wrap"),peek(c,loc+wrap(floor(ic)+1-loc,0,lenc),0,boundmode="wrap"),fract(ic)); cr=mix(peek(c,floor(ic),min(1,channels(c)-1),boundmode="wrap"),peek(c,loc+wrap(floor(ic)+1-loc,0,lenc),min(1,channels(c)-1),boundmode="wrap"),fract(ic));
+        dl=mix(peek(d,floor(idd),0,boundmode="wrap"),peek(d,lod+wrap(floor(idd)+1-lod,0,lend),0,boundmode="wrap"),fract(idd)); dr=mix(peek(d,floor(idd),min(1,channels(d)-1),boundmode="wrap"),peek(d,lod+wrap(floor(idd)+1-lod,0,lend),min(1,channels(d)-1),boundmode="wrap"),fract(idd));
+        sl=al*wa+bl*wb+cl*wc+dl*wd;
+        sr=ar*wa+br*wb+cr*wc+dr*wd;
+        g=peek(voices,i,7); k=peek(voices,i,8); mode=peek(voices,i,9);
+        a1=1/(1+g*(g+k)); a2=g*a1; a3=g*a2;
+        s1=peek(voices,i,12); s2=peek(voices,i,13); v3=sl-s2; bp=a1*s1+a2*v3; lp=s2+a2*s1+a3*v3;
+        poke(voices,fixdenorm(2*bp-s1),i,12); poke(voices,fixdenorm(2*lp-s2),i,13);
+        sl=mode<.5 ? sl : (mode<1.5 ? lp : (mode<2.5 ? bp : sl-k*bp-lp));
+        s1=peek(voices,i,14); s2=peek(voices,i,15); v3=sr-s2; bp=a1*s1+a2*v3; lp=s2+a2*s1+a3*v3;
+        poke(voices,fixdenorm(2*bp-s1),i,14); poke(voices,fixdenorm(2*lp-s2),i,15);
+        sr=mode<.5 ? sr : (mode<1.5 ? lp : (mode<2.5 ? bp : sr-k*bp-lp));
+        phase=age/max(1,dur-1); biasv=peek(voices,i,6); envshape=peek(voices,i,5);
+        tri=clamp(phase<biasv ? phase/biasv : (1-phase)/(1-biasv),0,1);
+        hann=.5-.5*cos(pi*tri); trap=min(1,tri*4);
+        env=envshape<=1 ? mix(tri,hann,envshape) : mix(hann,trap,envshape-1);
+        pv=peek(voices,i,4);
+        sumL+=sl*env*cos((pv+1)*pi*.25); sumR+=sr*env*sin((pv+1)*pi*.25);
+        poke(voices,age+1,i,0);
+    }
+}
+norm=norm+(1/sqrt(max(1,active*.375))-norm)*.001;
+wetL=tanh(sumL*norm); wetR=tanh(sumR*norm);
+gain=gain+(pow(10,output/20)-gain)*(1-exp(-1/(.02*samplerate)));
+out1=dcblock(wetL)*gain; out2=dcblock(wetR)*gain;
+out3=active; out4=heldpos;

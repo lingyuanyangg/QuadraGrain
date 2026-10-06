@@ -1,0 +1,188 @@
+{
+  "patcher": {
+    "fileversion": 1,
+    "appversion": {
+      "major": 9,
+      "minor": 1,
+      "revision": 3,
+      "architecture": "arm64",
+      "modernui": 1
+    },
+    "classnamespace": "dsp.gen",
+    "rect": [
+      50,
+      50,
+      1000,
+      750
+    ],
+    "boxes": [
+      {
+        "box": {
+          "id": "code",
+          "maxclass": "codebox",
+          "numinlets": 2,
+          "numoutlets": 4,
+          "patching_rect": [
+            150,
+            80,
+            800,
+            550
+          ],
+          "code": "// QUADRA GRAIN \u2014 sample-accurate scheduler, 64 non-stealing voices.\n// Data channel layout: age,duration,start,speed,pan,shape,bias,g,k,mode,filter states, four source regions.\nBuffer a; Buffer b; Buffer c; Buffer d;\nData voices(64,24);\nHistory clocker(0); History scanphase(0); History cursor(0);\nHistory mx(.5); History my(.5); History gain(0); History norm(1); History heldpos(.25);\nHistory lfoph1(0); History lfoph2(0); History sh1(0); History sh2(0);\nParam morphx(0.5, min=0, max=1);\nParam morphy(0.5, min=0, max=1);\nParam size(120, min=5, max=1000);\nParam density(24, min=0.5, max=150);\nParam amount(32, min=1, max=64);\nParam pitch(0, min=-36, max=36);\nParam position(0.25, min=0, max=1);\nParam scan(0.03, min=-1, max=1);\nParam spray(0.05, min=0, max=1);\nParam sizej(0.1, min=0, max=1);\nParam densityj(0.1, min=0, max=1);\nParam pitchj(0, min=0, max=24);\nParam rate(1, min=0.125, max=4);\nParam reverse(0, min=0, max=1);\nParam shape(1, min=0, max=2);\nParam bias(0.5, min=0.05, max=0.95);\nParam pan(0, min=-1, max=1);\nParam spread(0.25, min=0, max=1);\nParam macro(0, min=0, max=1);\nParam feedback(0, min=0, max=0.85);\nParam fbdelay(350, min=50, max=2000);\nParam cutoff(10000, min=40, max=18000);\nParam resonance(0.707, min=0.5, max=8);\nParam filterj(0, min=0, max=4);\nParam run(0, min=0, max=1);\nParam freeze(0, min=0, max=1);\nParam filtermode(1, min=0, max=3);\nParam inputgain(0, min=0, max=1);\nParam output(-15, min=-60, max=0);\nParam lfo1rate(0.13, min=0.01, max=20);\nParam lfo1depth(0, min=0, max=1);\nParam lfo1dest(0, min=0, max=24);\nParam lfo1shape(0, min=0, max=3);\nParam lfo2rate(0.07, min=0.01, max=20);\nParam lfo2depth(0, min=0, max=1);\nParam lfo2dest(0, min=0, max=24);\nParam lfo2shape(0, min=0, max=3);\nParam alevel(0, min=-70, max=6);\nParam blevel(0, min=-70, max=6);\nParam clevel(0, min=-70, max=6);\nParam dlevel(0, min=-70, max=6);\nParam astart(0, min=0, max=1);\nParam aend(1, min=0, max=1);\nParam bstart(0, min=0, max=1);\nParam bend(1, min=0, max=1);\nParam cstart(0, min=0, max=1);\nParam cend(1, min=0, max=1);\nParam dstart(0, min=0, max=1);\nParam dend(1, min=0, max=1);\nParam fbsize(1, min=0.25, max=4);\nParam fbdensity(1, min=0.25, max=4);\nParam fbpitch(0, min=-24, max=24);\nParam sra(44100);\nParam readya(1);\nHistory levela(1);\nParam srb(44100);\nParam readyb(1);\nHistory levelb(1);\nParam src(44100);\nParam readyc(1);\nHistory levelc(1);\nParam srd(44100);\nParam readyd(1);\nHistory leveld(1);\n\nlfoph1 = wrap(lfoph1+lfo1rate/samplerate,0,1);\nlfoph2 = wrap(lfoph2+lfo2rate/samplerate,0,1);\nsh1 = lfoph1 < lfo1rate/samplerate ? noise() : sh1;\nsh2 = lfoph2 < lfo2rate/samplerate ? noise() : sh2;\nlv1 = lfo1shape < .5 ? sin(lfoph1*twopi) : (lfo1shape < 1.5 ? 1-4*abs(lfoph1-.5) : (lfo1shape < 2.5 ? 2*lfoph1-1 : sh1));\nlv2 = lfo2shape < .5 ? sin(lfoph2*twopi) : (lfo2shape < 1.5 ? 1-4*abs(lfoph2-.5) : (lfo2shape < 2.5 ? 2*lfoph2-1 : sh2));\nv_morphx = clamp(morphx + ((lfo1dest == 1)*lv1*lfo1depth + (lfo2dest == 1)*lv2*lfo2depth)*0.5, 0, 1);\nv_morphy = clamp(morphy + ((lfo1dest == 2)*lv1*lfo1depth + (lfo2dest == 2)*lv2*lfo2depth)*0.5, 0, 1);\nv_size = clamp(size + ((lfo1dest == 3)*lv1*lfo1depth + (lfo2dest == 3)*lv2*lfo2depth)*497.5, 5, 1000);\nv_density = clamp(density + ((lfo1dest == 4)*lv1*lfo1depth + (lfo2dest == 4)*lv2*lfo2depth)*74.75, 0.5, 150);\nv_amount = clamp(amount + ((lfo1dest == 5)*lv1*lfo1depth + (lfo2dest == 5)*lv2*lfo2depth)*31.5, 1, 64);\nv_pitch = clamp(pitch + ((lfo1dest == 6)*lv1*lfo1depth + (lfo2dest == 6)*lv2*lfo2depth)*36.0, -36, 36);\nv_position = clamp(position + ((lfo1dest == 7)*lv1*lfo1depth + (lfo2dest == 7)*lv2*lfo2depth)*0.5, 0, 1);\nv_scan = clamp(scan + ((lfo1dest == 8)*lv1*lfo1depth + (lfo2dest == 8)*lv2*lfo2depth)*1.0, -1, 1);\nv_spray = clamp(spray + ((lfo1dest == 9)*lv1*lfo1depth + (lfo2dest == 9)*lv2*lfo2depth)*0.5, 0, 1);\nv_sizej = clamp(sizej + ((lfo1dest == 10)*lv1*lfo1depth + (lfo2dest == 10)*lv2*lfo2depth)*0.5, 0, 1);\nv_densityj = clamp(densityj + ((lfo1dest == 11)*lv1*lfo1depth + (lfo2dest == 11)*lv2*lfo2depth)*0.5, 0, 1);\nv_pitchj = clamp(pitchj + ((lfo1dest == 12)*lv1*lfo1depth + (lfo2dest == 12)*lv2*lfo2depth)*12.0, 0, 24);\nv_rate = clamp(rate + ((lfo1dest == 13)*lv1*lfo1depth + (lfo2dest == 13)*lv2*lfo2depth)*1.9375, 0.125, 4);\nv_reverse = clamp(reverse + ((lfo1dest == 14)*lv1*lfo1depth + (lfo2dest == 14)*lv2*lfo2depth)*0.5, 0, 1);\nv_shape = clamp(shape + ((lfo1dest == 15)*lv1*lfo1depth + (lfo2dest == 15)*lv2*lfo2depth)*1.0, 0, 2);\nv_bias = clamp(bias + ((lfo1dest == 16)*lv1*lfo1depth + (lfo2dest == 16)*lv2*lfo2depth)*0.44999999999999996, 0.05, 0.95);\nv_pan = clamp(pan + ((lfo1dest == 17)*lv1*lfo1depth + (lfo2dest == 17)*lv2*lfo2depth)*1.0, -1, 1);\nv_spread = clamp(spread + ((lfo1dest == 18)*lv1*lfo1depth + (lfo2dest == 18)*lv2*lfo2depth)*0.5, 0, 1);\nv_macro = clamp(macro + ((lfo1dest == 19)*lv1*lfo1depth + (lfo2dest == 19)*lv2*lfo2depth)*0.5, 0, 1);\nv_feedback = clamp(feedback + ((lfo1dest == 20)*lv1*lfo1depth + (lfo2dest == 20)*lv2*lfo2depth)*0.425, 0, 0.85);\nv_fbdelay = clamp(fbdelay + ((lfo1dest == 21)*lv1*lfo1depth + (lfo2dest == 21)*lv2*lfo2depth)*975.0, 50, 2000);\nv_cutoff = clamp(cutoff + ((lfo1dest == 22)*lv1*lfo1depth + (lfo2dest == 22)*lv2*lfo2depth)*8980.0, 40, 18000);\nv_resonance = clamp(resonance + ((lfo1dest == 23)*lv1*lfo1depth + (lfo2dest == 23)*lv2*lfo2depth)*3.75, 0.5, 8);\nv_filterj = clamp(filterj + ((lfo1dest == 24)*lv1*lfo1depth + (lfo2dest == 24)*lv2*lfo2depth)*2.0, 0, 4);\nlevela = levela + ((alevel <= -69.9 ? 0 : pow(10,alevel/20))*readya-levela)*(1-exp(-1/(.01*samplerate)));\nlevelb = levelb + ((blevel <= -69.9 ? 0 : pow(10,blevel/20))*readyb-levelb)*(1-exp(-1/(.01*samplerate)));\nlevelc = levelc + ((clevel <= -69.9 ? 0 : pow(10,clevel/20))*readyc-levelc)*(1-exp(-1/(.01*samplerate)));\nleveld = leveld + ((dlevel <= -69.9 ? 0 : pow(10,dlevel/20))*readyd-leveld)*(1-exp(-1/(.01*samplerate)));\n\n// Macro adds remaining headroom without overwriting the automatable base knobs.\njpos = v_spray+(1-v_spray)*v_macro;\njsize = v_sizej+(1-v_sizej)*v_macro;\njdens = v_densityj+(1-v_densityj)*v_macro;\njpitch = v_pitchj+(24-v_pitchj)*v_macro;\njpan = v_spread+(1-v_spread)*v_macro;\nscanphase = wrap(scanphase+v_scan/samplerate,0,1);\nheldpos = wrap(v_position+scanphase,0,1);\nmx = mx+(v_morphx-mx)*(1-exp(-1/(.015*samplerate)));\nmy = my+(v_morphy-my)*(1-exp(-1/(.015*samplerate)));\nwa=sqrt((1-mx)*my)*levela; wb=sqrt(mx*my)*levelb; wc=sqrt((1-mx)*(1-my))*levelc; wd=sqrt(mx*(1-my))*leveld;\nclocker = clocker-1;\nif (run > .5 && clocker <= 0) {\n    slot=-1;\n    for (j=0; j<64; j+=1) {\n        idx=wrap(cursor+j,0,64);\n        if (slot < 0 && idx < floor(v_amount) && peek(voices,idx,0) >= peek(voices,idx,1)) { slot=idx; }\n    }\n    if (slot >= 0) {\n        dur=max(5,v_size*(1+noise()*jsize*.95))*.001*samplerate;\n        spd=v_rate*pow(2,(v_pitch+noise()*jpitch)/12)*((noise()*.5+.5)<v_reverse ? -1 : 1);\n        fc=clamp(v_cutoff*pow(2,noise()*v_filterj),20,min(20000,samplerate*.4));\n        poke(voices,0,slot,0); poke(voices,dur,slot,1);\n        poke(voices,wrap(heldpos+noise()*jpos*.5,0,1),slot,2);\n        poke(voices,spd,slot,3); poke(voices,clamp(v_pan+noise()*jpan,-1,1),slot,4);\n        poke(voices,v_shape,slot,5); poke(voices,v_bias,slot,6);\n        poke(voices,tan(pi*fc/samplerate),slot,7); poke(voices,1/v_resonance,slot,8);\n        poke(voices,filtermode,slot,9);\n        for (z=12;z<16;z+=1) { poke(voices,0,slot,z); }\n        poke(voices,min(astart,aend),slot,16); poke(voices,max(astart,aend),slot,17);\n        poke(voices,min(bstart,bend),slot,18); poke(voices,max(bstart,bend),slot,19);\n        poke(voices,min(cstart,cend),slot,20); poke(voices,max(cstart,cend),slot,21);\n        poke(voices,min(dstart,dend),slot,22); poke(voices,max(dstart,dend),slot,23);\n        cursor=wrap(slot+1,0,64);\n    }\n    clocker=max(1,samplerate/v_density*(1+noise()*jdens*.95));\n}\nif (run < .5) { clocker=0; }\nsumL=0; sumR=0; active=0;\nfor (i=0; i<64; i+=1) {\n    age=peek(voices,i,0); dur=peek(voices,i,1);\n    if (age < dur && dur > 0) {\n        active+=1;\n        pos=peek(voices,i,2); speed=peek(voices,i,3);\n        loa=min(peek(voices,i,16)*dim(a),max(0,dim(a)-2));\n        lena=max(2,peek(voices,i,17)*dim(a)-loa);\n        ia=loa+wrap(pos*lena+age*speed*sra/samplerate,0,lena);\n        lob=min(peek(voices,i,18)*dim(b),max(0,dim(b)-2));\n        lenb=max(2,peek(voices,i,19)*dim(b)-lob);\n        ib=lob+wrap(pos*lenb+age*speed*srb/samplerate,0,lenb);\n        loc=min(peek(voices,i,20)*dim(c),max(0,dim(c)-2));\n        lenc=max(2,peek(voices,i,21)*dim(c)-loc);\n        ic=loc+wrap(pos*lenc+age*speed*src/samplerate,0,lenc);\n        lod=min(peek(voices,i,22)*dim(d),max(0,dim(d)-2));\n        lend=max(2,peek(voices,i,23)*dim(d)-lod);\n        idd=lod+wrap(pos*lend+age*speed*srd/samplerate,0,lend);\n        al=mix(peek(a,floor(ia),0,boundmode=\"wrap\"),peek(a,loa+wrap(floor(ia)+1-loa,0,lena),0,boundmode=\"wrap\"),fract(ia)); ar=mix(peek(a,floor(ia),min(1,channels(a)-1),boundmode=\"wrap\"),peek(a,loa+wrap(floor(ia)+1-loa,0,lena),min(1,channels(a)-1),boundmode=\"wrap\"),fract(ia));\n        bl=mix(peek(b,floor(ib),0,boundmode=\"wrap\"),peek(b,lob+wrap(floor(ib)+1-lob,0,lenb),0,boundmode=\"wrap\"),fract(ib)); br=mix(peek(b,floor(ib),min(1,channels(b)-1),boundmode=\"wrap\"),peek(b,lob+wrap(floor(ib)+1-lob,0,lenb),min(1,channels(b)-1),boundmode=\"wrap\"),fract(ib));\n        cl=mix(peek(c,floor(ic),0,boundmode=\"wrap\"),peek(c,loc+wrap(floor(ic)+1-loc,0,lenc),0,boundmode=\"wrap\"),fract(ic)); cr=mix(peek(c,floor(ic),min(1,channels(c)-1),boundmode=\"wrap\"),peek(c,loc+wrap(floor(ic)+1-loc,0,lenc),min(1,channels(c)-1),boundmode=\"wrap\"),fract(ic));\n        dl=mix(peek(d,floor(idd),0,boundmode=\"wrap\"),peek(d,lod+wrap(floor(idd)+1-lod,0,lend),0,boundmode=\"wrap\"),fract(idd)); dr=mix(peek(d,floor(idd),min(1,channels(d)-1),boundmode=\"wrap\"),peek(d,lod+wrap(floor(idd)+1-lod,0,lend),min(1,channels(d)-1),boundmode=\"wrap\"),fract(idd));\n        sl=al*wa+bl*wb+cl*wc+dl*wd;\n        sr=ar*wa+br*wb+cr*wc+dr*wd;\n        g=peek(voices,i,7); k=peek(voices,i,8); mode=peek(voices,i,9);\n        a1=1/(1+g*(g+k)); a2=g*a1; a3=g*a2;\n        s1=peek(voices,i,12); s2=peek(voices,i,13); v3=sl-s2; bp=a1*s1+a2*v3; lp=s2+a2*s1+a3*v3;\n        poke(voices,fixdenorm(2*bp-s1),i,12); poke(voices,fixdenorm(2*lp-s2),i,13);\n        sl=mode<.5 ? sl : (mode<1.5 ? lp : (mode<2.5 ? bp : sl-k*bp-lp));\n        s1=peek(voices,i,14); s2=peek(voices,i,15); v3=sr-s2; bp=a1*s1+a2*v3; lp=s2+a2*s1+a3*v3;\n        poke(voices,fixdenorm(2*bp-s1),i,14); poke(voices,fixdenorm(2*lp-s2),i,15);\n        sr=mode<.5 ? sr : (mode<1.5 ? lp : (mode<2.5 ? bp : sr-k*bp-lp));\n        phase=age/max(1,dur-1); biasv=peek(voices,i,6); envshape=peek(voices,i,5);\n        tri=clamp(phase<biasv ? phase/biasv : (1-phase)/(1-biasv),0,1);\n        hann=.5-.5*cos(pi*tri); trap=min(1,tri*4);\n        env=envshape<=1 ? mix(tri,hann,envshape) : mix(hann,trap,envshape-1);\n        pv=peek(voices,i,4);\n        sumL+=sl*env*cos((pv+1)*pi*.25); sumR+=sr*env*sin((pv+1)*pi*.25);\n        poke(voices,age+1,i,0);\n    }\n}\nnorm=norm+(1/sqrt(max(1,active*.375))-norm)*.001;\nwetL=tanh(sumL*norm); wetR=tanh(sumR*norm);\ngain=gain+(pow(10,output/20)-gain)*(1-exp(-1/(.02*samplerate)));\nout1=dcblock(wetL)*gain; out2=dcblock(wetR)*gain;\nout3=active; out4=heldpos;\n"
+        }
+      },
+      {
+        "box": {
+          "id": "in1",
+          "maxclass": "newobj",
+          "text": "in 1",
+          "patching_rect": [
+            70,
+            20,
+            50,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "in2",
+          "maxclass": "newobj",
+          "text": "in 2",
+          "patching_rect": [
+            140,
+            20,
+            50,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out1",
+          "maxclass": "newobj",
+          "text": "out 1",
+          "patching_rect": [
+            90,
+            670,
+            55,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out2",
+          "maxclass": "newobj",
+          "text": "out 2",
+          "patching_rect": [
+            180,
+            670,
+            55,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out3",
+          "maxclass": "newobj",
+          "text": "out 3",
+          "patching_rect": [
+            270,
+            670,
+            55,
+            22
+          ]
+        }
+      },
+      {
+        "box": {
+          "id": "out4",
+          "maxclass": "newobj",
+          "text": "out 4",
+          "patching_rect": [
+            360,
+            670,
+            55,
+            22
+          ]
+        }
+      }
+    ],
+    "lines": [
+      {
+        "patchline": {
+          "source": [
+            "in1",
+            0
+          ],
+          "destination": [
+            "code",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "in2",
+            0
+          ],
+          "destination": [
+            "code",
+            1
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            0
+          ],
+          "destination": [
+            "out1",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            1
+          ],
+          "destination": [
+            "out2",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            2
+          ],
+          "destination": [
+            "out3",
+            0
+          ]
+        }
+      },
+      {
+        "patchline": {
+          "source": [
+            "code",
+            3
+          ],
+          "destination": [
+            "out4",
+            0
+          ]
+        }
+      }
+    ]
+  }
+}
