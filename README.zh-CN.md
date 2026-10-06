@@ -106,18 +106,6 @@ Quadra_Grain_V2/
 - **路径与音频内容分离保存**：`buffer~ @embed 0` 不把用户 sample 嵌入源码，跨机器使用需要携带并重新定位素材。
 - **最终总线没有独立 limiter**：反馈写入端有硬限幅，两层各自有 `tanh`，但混合输出仍可能超过单层幅度。
 
-## 构建与验证
-
-在包含开发工具的源码目录中运行：
-
-```bash
-python3 tools/build.py
-```
-
-生成器只依赖 Python 标准库，会重建主补丁、三个 Gen 文件、主引擎 `.genexpr`、UI 脚本、参数清单和四个示例 WAV。长期修改应同时落实到生成器或 UI 模板，避免生成时覆盖。
-
-已完成验证包括拖放加载、鼠标选区、主颗粒出声、RUN 关闭后 Freeze 持续出声、feedback regrain 活动，以及关闭 RUN / Feedback 后恢复静音。范围见 [VALIDATION.md](VALIDATION.md)。这些记录不等同于所有参数组合的稳定性与性能测试。
-
 ## 开发方向
 
 可继续扩展真实写指针同步、regrain 独立调制与滤波、最终总线音量与 limiter、输入捕获、路径迁移和自动化回归测试。

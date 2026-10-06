@@ -109,18 +109,6 @@ The development directory also contains `tools/build.py`, `tools/ui_source.js`, 
 - **File paths and audio contents are stored separately.** `buffer~ @embed 0` does not embed user samples in the patch. Carry and relink audio files when moving between machines.
 - **There is no dedicated final-bus limiter.** The feedback write path is clipped and each granular layer uses `tanh`, but their combined output can exceed either layer's individual amplitude.
 
-## Building and validation
-
-From a source checkout containing the development tools:
-
-```bash
-python3 tools/build.py
-```
-
-The generator uses only the Python standard library. It rebuilds the main patch, three Gen files, primary `.genexpr`, UI script, parameter list, and four example WAVs. Apply persistent changes to the generator or UI template as well, since regeneration overwrites generated files.
-
-Recorded checks cover sample loading, mouse region selection, primary audio output, sustained Freeze after RUN is disabled, feedback regrain activity, and a return to silence after disabling RUN / Feedback. See [VALIDATION.md](VALIDATION.md). These records do not establish stability or performance across every parameter combination.
-
 ## Development directions
 
 Possible extensions include actual write-pointer synchronization, independent regrain modulation and filtering, final-bus level control and limiting, input capture, portable sample paths, and automated regression tests.
